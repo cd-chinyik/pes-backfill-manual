@@ -7,7 +7,7 @@
     - Get min and max event IDs from campaign launch event table (`t_camp_stat`) based on specified date range
     - If either min or max event ID cannot be found from the table, event will <b>not</b> be backfilled
     - Run bcp command based on min and max event IDs obtained and other specified parameters to generate backfill file
-- Finally, all the backfill files will be uploaded to specified S3 bucket
+- Finally, all the backfill files will be uploaded to specified S3 bucket and all the backfill files will be deleted afterwards
 
 ## How to use
 
@@ -21,8 +21,6 @@
 | **`$pesRegion`**        | The PES region. Options: `"na"` for North America, `"emea"` for EMEA, `"jpn"` for Japan. | `"na"`                                    |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"E:\xyz_data\dms\pes_backfill\manual"`   |
 | **`$s3Bucket`**         | The name of the S3 bucket where the backfill data will be uploaded.        | `"esl-ue1-dev01"`                         |
-| **`$s3Dir`**            | The directory path within the S3 bucket where the data will be stored.     | `"q2/esl-service/incoming"`               |
-| **`$s3Region`**         | The AWS region of the S3 bucket. Options: `"us-east-1"`, `"eu-west-1"`, `"ap-northeast-1"`. | `"us-east-1"`                             |
 - Run the script
 
 ### Additional Details:
