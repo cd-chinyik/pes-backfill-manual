@@ -5,9 +5,9 @@
 ### Define CDMSDB Server Instance Name
 $cdmsInstance = "localhost"
 ### Define Backfill Start Date
-$startDate = [DateTime]"2024-10-01"
+$startDate = [DateTime]"2022-10-17"
 ### Define Backfill End Date
-$endDate = [DateTime]"2024-10-11"
+$endDate = [DateTime]"2024-10-19"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
 ### Define PES Backfill Directory Full Path to be stored on the server
@@ -27,11 +27,11 @@ if ($custIds.Count -eq 0) {
     exit
 }
 
-##############################################################################################
-##      START BACKFILL PROCESS FOR ALL CUSTS                                                ##
-##      STEP 1 - Get min/max event IDs for each PES event type                              ##
-##      STEP 2 - Run bcp command to generate backfill csv file for each PES event type      ##
-##############################################################################################
+######################################################################
+##      START BACKFILL PROCESS FOR ALL CUSTS                        ##
+##      STEP 1 - Get min/max event IDs                              ##
+##      STEP 2 - Run bcp command to generate backfill csv file      ##
+######################################################################
 
 foreach ($custId in $custIds) {
     $custDbName = "xyz_cms_cust_$custId"
@@ -54,14 +54,19 @@ foreach ($custId in $custIds) {
 
     $todayDate = Get-Date -Format "yyyy-MM-dd"
     $todayTime = Get-Date -Format "HHmmss"
-    $outputFile = Join-Path $backfillDir "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_manual${todayTime}.tsv"
+    $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_pes-backfill-${todayTime}"
+    $outputFile = Join-Path $backfillDir "${filename}-raw.tsv"
     $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region=$pesRegion"
-    bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -c
+    bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
+
+    $outputUtf8File = Join-Path $backfillDir "${filename}.tsv"
+    Get-Content $outputFile -Encoding Unicode | Set-Content $outputUtf8File -Encoding UTF8
+    Remove-Item $outputFile
 }
 
 ###############################################################################
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming"
+aws s3 sync "$backfillDir" "s3://$s3Bucket/q1/esl-service/incoming"
 Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
