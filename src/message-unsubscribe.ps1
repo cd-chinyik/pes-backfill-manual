@@ -14,6 +14,8 @@ $pesRegion = "na"
 $backfillDir = "E:\xyz_data\dms\pes_backfill\manual"
 ### Define S3 Bucket
 $s3Bucket = "pes-cdms-992063009675"
+### Define batch size
+$batchSize = 1000000
 
 ##########################################################################
 ##      Get list of active parent cust_id from xyz_cms_common DB        ##
@@ -28,7 +30,8 @@ if ($custIds.Count -eq 0) {
 ######################################################################
 ##      START BACKFILL PROCESS FOR ALL CUSTS                        ##
 ##      STEP 1 - Get min/max event IDs                              ##
-##      STEP 2 - Run bcp command to generate backfill csv file      ##
+##      STEP 2 - Divide into batches of 1M                          ##
+##      STEP 3 - Run bcp command to generate backfill csv file      ##
 ######################################################################
 
 foreach ($custId in $custIds) {
@@ -49,16 +52,23 @@ foreach ($custId in $custIds) {
         continue
     }
 
-    $todayDate = Get-Date -Format "yyyy-MM-dd"
-    $todayTime = Get-Date -Format "HHmmss"    
-    $fileName = "msg-${pesRegion}_${custId}_messageUnsubscribe_${todayDate}_pes-backfill-${todayTime}"
-    $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
-    $sproc = "EXEC $custDbName.dbo.p_pes_backfill_unsub_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
-    bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
+    $batchNum = 1
+    for ($batchStart = $minEventId; $batchStart -le $maxEventId; $batchStart += $batchSize) {
+        $batchEnd = [math]::Min($batchStart + $batchSize - 1, $maxEventId)
 
-    $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
-    Get-Content $outputFile -Encoding Unicode | Set-Content $outputUtf8File -Encoding UTF8
-    Remove-Item $outputFile
+        $todayDate = Get-Date -Format "yyyy-MM-dd"
+        $todayTime = Get-Date -Format "HHmmss"    
+        $fileName = "msg-${pesRegion}_${custId}_messageUnsubscribe_${todayDate}_pes-backfill-${todayTime}"
+        $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
+        $sproc = "EXEC $custDbName.dbo.p_pes_backfill_unsub_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
+        bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
+    
+        $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
+        Get-Content $outputFile -Encoding Unicode | Set-Content $outputUtf8File -Encoding UTF8
+        Remove-Item $outputFile
+
+        $batchNum++
+    }
 }
 
 ###############################################################################

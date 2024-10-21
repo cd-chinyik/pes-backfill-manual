@@ -21,6 +21,7 @@
 | **`$pesRegion`**        | The PES region. Options: `"na"` for North America, `"emea"` for EMEA, `"jpn"` for Japan. | `"na"`                                    |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"E:\xyz_data\dms\pes_backfill\manual"`   |
 | **`$s3Bucket`**         | The name of the S3 bucket where the backfill data will be uploaded.        | `"esl-ue1-dev01"`                         |
+| **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `1000000`                         |
 
 - Open Powershell ISE ![alt text](/images/powershell-ise.png)
 - Paste the script to run in the text editor and click "Run Script"
