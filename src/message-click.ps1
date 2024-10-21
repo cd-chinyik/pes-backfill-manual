@@ -14,6 +14,8 @@ $pesRegion = "na"
 $backfillDir = "E:\xyz_data\dms\pes_backfill\manual"
 ### Define S3 Bucket
 $s3Bucket = "pes-cdms-992063009675"
+### Define AWS Profile
+$s3Profile = "default"
 ### Define batch size
 $batchSize = 1000000
 
@@ -76,5 +78,5 @@ foreach ($custId in $custIds) {
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming"
+# aws s3 sync "$backfillDir" "s3://$s3Bucket/q1/esl-service/incoming" --profile $s3Profile
 # Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
