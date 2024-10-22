@@ -80,5 +80,5 @@ foreach ($custId in $custIds) {
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/q1/esl-service/incoming" --profile $s3Profile
+# aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming" --profile $s3Profile
 # Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
