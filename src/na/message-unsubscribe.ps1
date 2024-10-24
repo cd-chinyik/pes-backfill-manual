@@ -3,19 +3,15 @@
 ######################################
 
 ### Define CDMSDB Server Instance Name
-$cdmsInstance = "localhost"
+$cdmsInstance = "NY5PCDMSDBXX"
 ### Define Backfill Start Date
-$startDate = [DateTime]"2023-01-01"
+$startDate = [DateTime]"2024-07-01"
 ### Define Backfill End Date
-$endDate = [DateTime]"2024-10-20"
+$endDate = [DateTime]"2024-10-10"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
 ### Define PES Backfill Directory Full Path to be stored on the server
-$backfillDir = "E:\xyz_data\dms\pes_backfill\manual"
-### Define S3 Bucket
-$s3Bucket = "pes-cdms-992063009675"
-### Define AWS Profile
-$s3Profile = "default"
+$backfillDir = "V:\DMS_Data04\pes_backfill\na"
 ### Define batch size
 $batchSize = 1000000
 
@@ -40,11 +36,10 @@ foreach ($custId in $custIds) {
     $custDbName = "xyz_dms_cust_$custId"
     $eventQuery = @"
         SELECT 
-            MIN(click_id) AS min_event_id,
-            MAX(click_id) AS max_event_id
-        FROM dbo.t_click WITH (NOLOCK)
-        WHERE click_type_id = 100
-            AND click_time BETWEEN '$startDate' AND '$endDate';
+            MIN(unsub_id) AS min_event_id,
+            MAX(unsub_id) AS max_event_id
+        FROM dbo.t_msg_unsub WITH (NOLOCK)
+        WHERE unsub_time BETWEEN '$startDate' AND '$endDate';
 "@
     
     $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
@@ -61,9 +56,9 @@ foreach ($custId in $custIds) {
 
         $todayDate = Get-Date -Format "yyyy-MM-dd"
         $todayTime = Get-Date -Format "HHmmss"    
-        $fileName = "msg-${pesRegion}_${custId}_messageOpen_${todayDate}_pes-backfill-${todayTime}"
+        $fileName = "msg-${pesRegion}_${custId}_messageUnsubscribe_${todayDate}_pes-backfill-${todayTime}"
         $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
-        $sproc = "EXEC $custDbName.dbo.p_pes_backfill_open_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
+        $sproc = "EXEC $custDbName.dbo.p_pes_backfill_unsub_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
         bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
     
         $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
@@ -76,7 +71,7 @@ foreach ($custId in $custIds) {
 
 ###############################################################################
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
-###############################################################################
+#############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming" --profile $s3Profile
-# Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
+aws s3 sync "$backfillDir" "s3://es-loader-ue1-prod01/esl-service/incoming" --profile "na_backfill"
+Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force

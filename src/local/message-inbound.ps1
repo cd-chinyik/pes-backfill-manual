@@ -5,7 +5,7 @@
 ### Define CDMSDB Server Instance Name
 $cdmsInstance = "localhost"
 ### Define Backfill Start Date
-$startDate = [DateTime]"2020-05-01"
+$startDate = [DateTime]"2024-07-01"
 ### Define Backfill End Date
 $endDate = [DateTime]"2024-10-10"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
@@ -13,7 +13,7 @@ $pesRegion = "na"
 ### Define PES Backfill Directory Full Path to be stored on the server
 $backfillDir = "E:\xyz_data\dms\pes_backfill\manual"
 ### Define S3 Bucket
-$s3Bucket = "pes-cdms-992063009675"
+$s3Bucket = "esl-ue1-dev01"
 ### Define AWS Profile
 $s3Profile = "default"
 ### Define batch size
@@ -40,10 +40,10 @@ foreach ($custId in $custIds) {
     $custDbName = "xyz_dms_cust_$custId"
     $eventQuery = @"
         SELECT 
-            MIN(unsub_id) AS min_event_id,
-            MAX(unsub_id) AS max_event_id
-        FROM dbo.t_msg_unsub WITH (NOLOCK)
-        WHERE unsub_time BETWEEN '$startDate' AND '$endDate';
+            MIN(response_id) AS min_event_id,
+            MAX(response_id) AS max_event_id
+        FROM dbo.t_sms_response WITH (NOLOCK)
+        WHERE response_time BETWEEN '$startDate' AND '$endDate';
 "@
     
     $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
@@ -60,9 +60,9 @@ foreach ($custId in $custIds) {
 
         $todayDate = Get-Date -Format "yyyy-MM-dd"
         $todayTime = Get-Date -Format "HHmmss"    
-        $fileName = "msg-${pesRegion}_${custId}_messageUnsubscribe_${todayDate}_pes-backfill-${todayTime}"
+        $fileName = "msg-${pesRegion}_${custId}_messageInbound_${todayDate}_pes-backfill-${todayTime}"
         $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
-        $sproc = "EXEC $custDbName.dbo.p_pes_backfill_unsub_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
+        $sproc = "EXEC $custDbName.dbo.p_pes_backfill_inbound_get @min_event_id=$minEventId, @max_event_id=$maxEventId, @region='$pesRegion'"
         bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
     
         $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"

@@ -3,19 +3,15 @@
 ######################################
 
 ### Define CDMSDB Server Instance Name
-$cdmsInstance = "localhost"
+$cdmsInstance = "NY5PCDMSDBXX"
 ### Define Backfill Start Date
-$startDate = [DateTime]"2020-05-01"
+$startDate = [DateTime]"2024-07-01"
 ### Define Backfill End Date
 $endDate = [DateTime]"2024-10-10"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
-$pesRegion = "na"
+$pesRegion = "emea"
 ### Define PES Backfill Directory Full Path to be stored on the server
-$backfillDir = "E:\xyz_data\dms\pes_backfill\manual"
-### Define S3 Bucket
-$s3Bucket = "pes-cdms-992063009675"
-### Define AWS Profile
-$s3Profile = "default"
+$backfillDir = "V:\DMS_Data04\pes_backfill\na"
 ### Define batch size
 $batchSize = 1000000
 
@@ -80,5 +76,5 @@ foreach ($custId in $custIds) {
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming" --profile $s3Profile
-# Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
+aws s3 sync "$backfillDir" "s3://es-loader-ew1-prod01/esl-service/incoming" --profile "emea_backfill"
+Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
