@@ -17,7 +17,7 @@
 
 | Parameter              | Description                                                               | Example Value                             |
 |------------------------|---------------------------------------------------------------------------|-------------------------------------------|
-| **`$cdmsInstance`**     | CDMSDB server instance name.                  | `"localhost"`                             |
+| **`$cdmsInstances`**     | Array of CDMSDB server instance names.                   | `@("localhost")`                             |
 | **`$startDate`**        | The start date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)         | `[DateTime]"2024-09-01"`                  |
 | **`$endDate`**          | The end date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)           | `[DateTime]"2024-10-08"`                  |
 | **`$pesRegion`**        | The PES region. Options: `"na"` for North America, `"emea"` for EMEA, `"jpn"` for Japan. | `"na"`                                    |

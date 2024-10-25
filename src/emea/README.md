@@ -17,7 +17,7 @@
 
 | Parameter              | Description                                                               | Example Value                             |
 |------------------------|---------------------------------------------------------------------------|-------------------------------------------|
-| **`$cdmsInstance`**     | CDMSDB server instance name.                  | `"FF1PCDMSDBXX"`                             |
+| **`$cdmsInstances`**     | Array of CDMSDB server instance names.                   | `@("FF1PCDMSDB01","FF1PCDMSDB10")`                             |
 | **`$startDate`**        | The start date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)         | `[DateTime]"2024-09-01"`                  |
 | **`$endDate`**          | The end date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)           | `[DateTime]"2024-10-08"`                  |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"V:\DMS_Data04\pes_backfill\na"`   |

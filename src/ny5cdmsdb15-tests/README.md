@@ -9,7 +9,7 @@
         - Get min and max event IDs from respective event tables based on specified date range
         - If either min or max event ID cannot be found from the table, event will <b>not</b> be backfilled
         - Run bcp command based on min and max event IDs obtained and other specified parameters to generate backfill file
-    - Finally, all the backfill files will be uploaded to specified S3 bucket and all the backfill files will be deleted afterwards
+    - When all the backfill files is being generated, please download it manually and pass it to Wei Tyug Lim (ML Team) for her to test on her ESL env.
 
 ## How to use
 
