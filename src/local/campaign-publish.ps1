@@ -4,10 +4,6 @@
 
 ### Define CDMSDB Server Instance Name
 $cdmsInstance = "localhost"
-### Define Backfill Start Date
-$startDate = [DateTime]"2024-10-24"
-### Define Backfill End Date
-$endDate = [DateTime]"2024-10-25"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
 ### Define PES Backfill Directory Full Path to be stored on the server
@@ -17,7 +13,7 @@ $s3Bucket = "esl-ue1-dev01"
 ### Define AWS Profile
 $s3Profile = "default"
 ### Define batch size
-$batchSize = 1000000
+$batchSize = 5000
 
 ##########################################################################
 ##      Get list of active parent cust_id from xyz_cms_common DB        ##
@@ -39,19 +35,15 @@ if ($custIds.Count -eq 0) {
 foreach ($custId in $custIds) {
     $custDbName = "xyz_cms_cust_$custId"
     $eventQuery = @"
-        SELECT MIN(camp_id) AS min_event_id, MAX(camp_id) AS max_event_id
+        SELECT MAX(camp_id) AS max_event_id
         FROM dbo.t_camp_stat WITH(NOLOCK)
-        WHERE merge_setup_time BETWEEN '$startDate' AND '$endDate'
-            OR dms_setup_time BETWEEN '$startDate' AND '$endDate'
-            OR rts_setup_time BETWEEN '$startDate' AND '$endDate'
-            OR inb_setup_time BETWEEN '$startDate' AND '$endDate'
 "@
     
     $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
-    $minEventId = $minMaxResult.min_event_id
+    $minEventId = 1
     $maxEventId = $minMaxResult.max_event_id
 
-    if ([string]::IsNullOrWhiteSpace($minEventId) -or [string]::IsNullOrWhiteSpace($maxEventId)) {
+    if ([string]::IsNullOrWhiteSpace($maxEventId)) {
         continue
     }
 
@@ -78,5 +70,12 @@ foreach ($custId in $custIds) {
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/q1/esl-service/incoming" --profile $s3Profile
-# Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
+$files = Get-ChildItem -Path $backfillDir
+foreach ($file in $files) {
+    $filePath = $file.FullName
+    $fileName = $file.Name
+    $uploadResult = aws s3 cp $filePath "s3://$s3Bucket/q1/esl-service/incoming/$fileName" --profile $s3Profile
+    if ($uploadResult -match "upload:") {
+        Remove-Item -Path $filePath -Force
+    }
+}

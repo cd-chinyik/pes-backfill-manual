@@ -15,8 +15,12 @@
 
 | Parameter              | Description                                                               | Example Value                             |
 |------------------------|---------------------------------------------------------------------------|-------------------------------------------|
-| **`$cdmsInstance`**     | CDMSDB server instance name.                   | `"JPXPCDMSDBXX"`                             |
+| **`$cdmsInstance`**     | CDMSDB server instance name.                  | `"NY5PCDMSDBXX"`                             |
 | **`$startDate`**        | The start date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)         | `[DateTime]"2024-09-01"`                  |
 | **`$endDate`**          | The end date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)           | `[DateTime]"2024-10-08"`                  |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"V:\DMS_Data04\pes_backfill\na"`   |
 | **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `50000`                         |
+
+## Additional Notes:
+
+- These scripts will not upload files to ESL S3 buckets directly, instead they should be manually download first and then pass to Wei Tyug Lim (ML Team) for her to perform her testing on ESL env against prod data

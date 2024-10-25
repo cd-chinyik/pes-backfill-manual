@@ -68,17 +68,3 @@ foreach ($custId in $custIds) {
         $batchNum++
     }
 }
-
-###############################################################################
-##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
-###############################################################################
-
-$files = Get-ChildItem -Path $backfillDir
-foreach ($file in $files) {
-    $filePath = $file.FullName
-    $fileName = $file.Name
-    $uploadResult = aws s3 cp $filePath "s3://es-loader-ue1-prod01/esl-service/incoming/$fileName" --profile "na_backfill"
-    if ($uploadResult -match "upload:") {
-        Remove-Item -Path $filePath -Force
-    }
-}

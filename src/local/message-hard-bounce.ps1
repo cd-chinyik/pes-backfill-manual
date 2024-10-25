@@ -17,7 +17,7 @@ $s3Bucket = "esl-ue1-dev01"
 ### Define AWS Profile
 $s3Profile = "default"
 ### Define batch size
-$batchSize = 1000000
+$batchSize = 50000
 
 ##########################################################################
 ##      Get list of active parent cust_id from xyz_cms_common DB        ##
@@ -80,5 +80,12 @@ foreach ($custId in $custIds) {
 ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
 ###############################################################################
 
-# aws s3 sync "$backfillDir" "s3://$s3Bucket/esl-service/incoming" --profile $s3Profile
-# Get-ChildItem -Path "$backfillDir" -File | Remove-Item -Force
+$files = Get-ChildItem -Path $backfillDir
+foreach ($file in $files) {
+    $filePath = $file.FullName
+    $fileName = $file.Name
+    $uploadResult = aws s3 cp $filePath "s3://$s3Bucket/q1/esl-service/incoming/$fileName" --profile $s3Profile
+    if ($uploadResult -match "upload:") {
+        Remove-Item -Path $filePath -Force
+    }
+}

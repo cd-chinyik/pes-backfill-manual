@@ -16,13 +16,13 @@
 | Parameter              | Description                                                               | Example Value                             |
 |------------------------|---------------------------------------------------------------------------|-------------------------------------------|
 | **`$cdmsInstance`**     | CDMSDB server instance name.                  | `"localhost"`                             |
-| **`$startDate`**        | The start date for the backfill operation (in `DateTime` format).          | `[DateTime]"2024-09-01"`                  |
-| **`$endDate`**          | The end date for the backfill operation (in `DateTime` format).            | `[DateTime]"2024-10-08"`                  |
+| **`$startDate`**        | The start date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)         | `[DateTime]"2024-09-01"`                  |
+| **`$endDate`**          | The end date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)           | `[DateTime]"2024-10-08"`                  |
 | **`$pesRegion`**        | The PES region. Options: `"na"` for North America, `"emea"` for EMEA, `"jpn"` for Japan. | `"na"`                                    |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"V:\DMS_Data04\pes_backfill\na"`   |
 | **`$s3Bucket`**         | The name of the S3 bucket where the backfill data will be uploaded.        | `"esl-ue1-dev01"`                         |
 | **`$s3Profile`**         | AWS Profile Name that points to the correct IAM User credentials stored in `.aws/credential` file locally.        | `"default"`                         |
-| **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `1000000`                         |
+| **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `50000`                         |
 
 - Open Powershell ISE ![alt text](/images/powershell-ise.png)
 - Paste the script to run in the text editor and click "Run Script"

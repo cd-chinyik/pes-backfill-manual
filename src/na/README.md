@@ -16,7 +16,7 @@
 | Parameter              | Description                                                               | Example Value                             |
 |------------------------|---------------------------------------------------------------------------|-------------------------------------------|
 | **`$cdmsInstance`**     | CDMSDB server instance name.                  | `"NY5PCDMSDBXX"`                             |
-| **`$startDate`**        | The start date for the backfill operation (in `DateTime` format).          | `[DateTime]"2024-09-01"`                  |
-| **`$endDate`**          | The end date for the backfill operation (in `DateTime` format).            | `[DateTime]"2024-10-08"`                  |
+| **`$startDate`**        | The start date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)         | `[DateTime]"2024-09-01"`                  |
+| **`$endDate`**          | The end date for the backfill operation in 'YYYY-MM-DD' format. (Does not apply to campaign_publish backfill as it pulls all data from the beginning)           | `[DateTime]"2024-10-08"`                  |
 | **`$backfillDir`**      | The full path of the directory where the backfill data will be stored.     | `"V:\DMS_Data04\pes_backfill\na"`   |
-| **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `1000000`                         |
+| **`$batchSize`**         | The number of events to be generated in each backfill file for batching purpose.        | `50000`                         |
