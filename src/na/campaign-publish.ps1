@@ -68,14 +68,10 @@ foreach ($cdmsInstance in $cdmsInstances) {
             bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
 
             $outputUtf8File = Join-Path $backfillDir "${filename}.tsv"
-            Get-Content $outputFile -Encoding Unicode | Set-Content $outputUtf8File -Encoding UTF8
 
-
-	    ### Convert UTF8 to UTF8 No BOM
-	    $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-            $outputUtf8NoBomFile = Join-Path $backfillDir "${filename}.tsv"
-            [System.IO.File]::WriteAllLines($outputUtf8NoBomFile, (Get-Content $outputFile), $Utf8NoBomEncoding)
-
+ 	        ### Convert UTF8 No BOM
+            $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+            [System.IO.File]::WriteAllLines($outputUtf8File , (Get-Content $outputFile), $Utf8NoBomEncoding)
             Remove-Item $outputFile
 
             $batchNum++

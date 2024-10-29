@@ -62,12 +62,15 @@ foreach ($cdmsInstance in $cdmsInstances) {
             $todayDate = Get-Date -Format "yyyy-MM-dd"
             $todayTime = Get-Date -Format "HHmmss"
             $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstance}-${todayTime}-batch${batchNum}"
-            $outputFile = Join-Path $backfillDir "${filename}-raw.tsv"
+            $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
             $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region=$pesRegion"
             bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
 
-            $outputUtf8File = Join-Path $backfillDir "${filename}.tsv"
-            Get-Content $outputFile -Encoding Unicode | Set-Content $outputUtf8File -Encoding UTF8
+            $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
+
+ 	        ### Convert UTF8 No BOM
+            $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
+            [System.IO.File]::WriteAllLines($outputUtf8File , (Get-Content $outputFile), $Utf8NoBomEncoding)	
             Remove-Item $outputFile
 
             $batchNum++
