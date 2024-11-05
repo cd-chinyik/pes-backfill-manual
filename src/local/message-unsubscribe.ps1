@@ -77,7 +77,19 @@ foreach ($cdmsInstance in $cdmsInstances) {
 
  	        ### Convert UTF8 No BOM
             $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-            [System.IO.File]::WriteAllLines($outputUtf8File , (Get-Content $outputFile), $Utf8NoBomEncoding)
+            # Check if file exists
+            if (Test-Path $outputFile) {
+                $fileContent = Get-Content $outputFile
+                
+                # Check if fileContent is not an empty array
+                if ($fileContent.Count -gt 0) {
+                    [System.IO.File]::WriteAllLines($outputUtf8File, $fileContent, $Utf8NoBomEncoding)
+                } else {
+                    Write-Output "Skipping Converting to UTF-8 NO BOM because file content is empty."
+                }
+            } else {
+                Write-Output "Skipping Converting to UTF-8 NO BOM because file does not exist."
+            }
             Remove-Item $outputFile
 
             $batchNum++

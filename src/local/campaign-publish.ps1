@@ -4,7 +4,7 @@
 
 ### Define CDMSDB Server Instance Names
 $cdmsInstances = @(
-    "localhost", "localhost2"
+    "localhost"
 )
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
@@ -63,14 +63,26 @@ foreach ($cdmsInstance in $cdmsInstances) {
             $todayTime = Get-Date -Format "HHmmss"
             $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstance}-${todayTime}-batch${batchNum}"
             $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
-            $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region=$pesRegion"
+            $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region=$pesRegion, @camp_ids='19800'"
             bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
 
             $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
 
  	        ### Convert UTF8 No BOM
             $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $False
-            [System.IO.File]::WriteAllLines($outputUtf8File , (Get-Content $outputFile), $Utf8NoBomEncoding)	
+            # Check if file exists
+            if (Test-Path $outputFile) {
+                $fileContent = Get-Content $outputFile
+                
+                # Check if fileContent is not an empty array
+                if ($fileContent.Count -gt 0) {
+                    [System.IO.File]::WriteAllLines($outputUtf8File, $fileContent, $Utf8NoBomEncoding)
+                } else {
+                    Write-Output "Skipping Converting to UTF-8 NO BOM because file content is empty."
+                }
+            } else {
+                Write-Output "Skipping Converting to UTF-8 NO BOM because file does not exist."
+            }	
             Remove-Item $outputFile
 
             $batchNum++
@@ -86,8 +98,8 @@ foreach ($cdmsInstance in $cdmsInstances) {
         $filePath = $file.FullName
         $fileName = $file.Name
         $uploadResult = aws s3 cp $filePath "s3://esl-ue1-dev01/q1/esl-service/incoming/$fileName"
-        if ($uploadResult -match "upload:") {
-            Remove-Item -Path $filePath -Force
-        }
+        # if ($uploadResult -match "upload:") {
+        #     Remove-Item -Path $filePath -Force
+        # }
     }
 }
