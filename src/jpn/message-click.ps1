@@ -102,7 +102,7 @@ foreach ($cdmsInstance in $cdmsInstances) {
     ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
     ###############################################################################
     
-    $files = Get-ChildItem -Path $backfillDir
+    $files = Get-ChildItem -Path $backfillDir | Where-Object { $_.Name -notlike '*-raw.tsv' }
     foreach ($file in $files) {
         $filePath = $file.FullName
         $fileName = $file.Name
