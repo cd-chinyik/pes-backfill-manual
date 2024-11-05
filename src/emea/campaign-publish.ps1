@@ -86,7 +86,7 @@ foreach ($cdmsInstance in $cdmsInstances) {
     foreach ($file in $files) {
         $filePath = $file.FullName
         $fileName = $file.Name
-        $uploadResult = aws s3 cp $filePath "s3://es-loader-ew1-prod01/esl-service/incoming/$fileName" --profile "emea_backfill"
+        $uploadResult = aws s3 cp $filePath "s3://es-loader-ew1-prod02/esl-service/incoming/$fileName" --profile "emea_backfill"
         if ($uploadResult -match "upload:") {
             Remove-Item -Path $filePath -Force
         }
