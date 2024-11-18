@@ -4,12 +4,12 @@
 
 ### Define CDMSDB Server Instance Names
 $cdmsInstances = @(
-    "localhost", "localhost2"
+    "localhost"
 )
 ### Define Backfill Start Date
-$startDate = [DateTime]"2024-07-01"
+$startDate = [DateTime]"2022-07-01 15:30:00"
 ### Define Backfill End Date
-$endDate = [DateTime]"2024-10-10"
+$endDate = [DateTime]"2024-10-10 15:30:00"
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
 ### Define PES Backfill Directory Full Path to be stored on the server
@@ -56,6 +56,7 @@ foreach ($cdmsInstance in $cdmsInstances) {
                 AND bc.hard_flag = 1;
 "@
         
+        Write-Output $eventQuery
         $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
         $minEventId = $minMaxResult.min_event_id
         $maxEventId = $minMaxResult.max_event_id
@@ -71,11 +72,11 @@ foreach ($cdmsInstance in $cdmsInstances) {
 
             $todayDate = Get-Date -Format "yyyy-MM-dd"
             $todayTime = Get-Date -Format "HHmmss"    
-            $fileName = "msg-${pesRegion}_${custId}_messageHardBounce_${todayDate}_${cdmsInstance}-${todayTime}"
+            $fileName = "msg-${pesRegion}_${custId}_messageHardBounce_${todayDate}_${cdmsInstance}-${todayTime}-batch${batchNum}"
             $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
             $sproc = "EXEC $custDbName.dbo.p_pes_backfill_hard_bounce_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region='$pesRegion'"
-            bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
-        
+            # bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
+
             $outputUtf8File = Join-Path $backfillDir "${fileName}.tsv"
 
  	        ### Convert UTF8 No BOM
@@ -103,13 +104,13 @@ foreach ($cdmsInstance in $cdmsInstances) {
     ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
     ###############################################################################
     
-    $files = Get-ChildItem -Path $backfillDir | Where-Object { $_.Name -notlike '*-raw.tsv' }
-    foreach ($file in $files) {
-        $filePath = $file.FullName
-        $fileName = $file.Name
-        $uploadResult = aws s3 cp $filePath "s3://esl-ue1-dev01/q1/esl-service/incoming/$fileName"
-        if ($uploadResult -match "upload:") {
-            Remove-Item -Path $filePath -Force
-        }
-    }
+    # $files = Get-ChildItem -Path $backfillDir | Where-Object { $_.Name -notlike '*-raw.tsv' }
+    # foreach ($file in $files) {
+    #     $filePath = $file.FullName
+    #     $fileName = $file.Name
+    #     $uploadResult = aws s3 cp $filePath "s3://esl-ue1-dev01/q1/esl-service/incoming/$fileName"
+    #     if ($uploadResult -match "upload:") {
+    #         Remove-Item -Path $filePath -Force
+    #     }
+    # }
 }

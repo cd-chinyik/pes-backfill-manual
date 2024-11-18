@@ -62,7 +62,8 @@ foreach ($cdmsInstance in $cdmsInstances) {
 
             $todayDate = Get-Date -Format "yyyy-MM-dd"
             $todayTime = Get-Date -Format "HHmmss"
-            $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstance}-${todayTime}-batch${batchNum}"
+            $cdmsInstanceFilename = $cdmsInstance.Replace('\', '-')
+            $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstanceFilename}-${todayTime}-batch${batchNum}"
             $outputFile = Join-Path $backfillDir "${filename}-raw.tsv"
             $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region=$pesRegion"
             bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w

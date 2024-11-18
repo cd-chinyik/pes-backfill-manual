@@ -4,7 +4,7 @@
 
 ### Define CDMSDB Server Instance Names
 $cdmsInstances = @(
-    "localhost"
+    "localhost\SQL01"
 )
 ### Define PES Region (Use "na" for NA custs, "emea" for EMEA custs and "jpn" for Japan custs)
 $pesRegion = "na"
@@ -15,7 +15,7 @@ $batchSize = 10000
 
 foreach ($cdmsInstance in $cdmsInstances) {
     try {
-        Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database "xyz_cms_common" -Query "SELECT 1"
+        # Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database "xyz_cms_common" -Query "SELECT 1"
     } catch {
         Write-Output "Failed to connect to server=${cdmsInstance}"
         continue
@@ -26,11 +26,12 @@ foreach ($cdmsInstance in $cdmsInstances) {
     ##########################################################################  
 
     $custQuery = "SELECT DISTINCT cust_id FROM t_customer WITH(NOLOCK) WHERE status_id=500 AND parent_cust_id=0"
-    $custIds = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database "xyz_cms_common" -Query $custQuery | Select-Object -expand cust_id
-    if ($custIds.Count -eq 0) {
-        Write-Output "There is no active parent cust_id in server=${cdmsInstance}"
-        continue
-    }
+    # $custIds = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database "xyz_cms_common" -Query $custQuery | Select-Object -expand cust_id
+    # if ($custIds.Count -eq 0) {
+    #     Write-Output "There is no active parent cust_id in server=${cdmsInstance}"
+    #     continue
+    # }
+    $custIds = @("100")
 
     ######################################################################
     ##      START BACKFILL PROCESS FOR ALL CUSTS                        ##
@@ -46,14 +47,14 @@ foreach ($cdmsInstance in $cdmsInstances) {
             FROM dbo.t_camp_stat WITH(NOLOCK)
 "@
         
-        $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
-        $minEventId = 1
-        $maxEventId = $minMaxResult.max_event_id
+        # $minMaxResult = Invoke-Sqlcmd -ServerInstance $cdmsInstance -Database $custDbName -Query $eventQuery
+        # $minEventId = 1
+        # $maxEventId = $minMaxResult.max_event_id
 
-        if ([string]::IsNullOrWhiteSpace($maxEventId)) {
-            Write-Output "There is no data to backfill for cust_id=${custId}, server=${cdmsInstance}"
-            continue
-        }
+        # if ([string]::IsNullOrWhiteSpace($maxEventId)) {
+        #     Write-Output "There is no data to backfill for cust_id=${custId}, server=${cdmsInstance}"
+        #     continue
+        # }
 
         $batchNum = 1
         for ($batchStart = $minEventId; $batchStart -le $maxEventId; $batchStart += $batchSize) {
@@ -61,7 +62,10 @@ foreach ($cdmsInstance in $cdmsInstances) {
 
             $todayDate = Get-Date -Format "yyyy-MM-dd"
             $todayTime = Get-Date -Format "HHmmss"
-            $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstance}-${todayTime}-batch${batchNum}"
+            $cdmsInstanceFilename = $cdmsInstance.Replace('\', '-')
+            $fileName = "msg-${pesRegion}_${custId}_campaignPublish_${todayDate}_${cdmsInstanceFilename}-${todayTime}-batch${batchNum}"
+
+            Write-Output $fileName
             $outputFile = Join-Path $backfillDir "${fileName}-raw.tsv"
             $sproc = "EXEC $custDbName.dbo.p_pes_backfill_launch_camp_get @min_event_id=$batchStart, @max_event_id=$batchEnd, @region=$pesRegion, @camp_ids='19800'"
             bcp $sproc QUERYOUT "$outputFile" -S $cdmsInstance -T -k -w
@@ -93,13 +97,13 @@ foreach ($cdmsInstance in $cdmsInstances) {
     ##      UPLOAD ALL BACKFILL FILE TO S3 BUCKET AND DELETE THEM AFTERWARDS     ##
     ###############################################################################
     
-    $files = Get-ChildItem -Path $backfillDir | Where-Object { $_.Name -notlike '*-raw.tsv' }
-    foreach ($file in $files) {
-        $filePath = $file.FullName
-        $fileName = $file.Name
-        $uploadResult = aws s3 cp $filePath "s3://esl-ue1-dev01/q1/esl-service/incoming/$fileName"
-        # if ($uploadResult -match "upload:") {
-        #     Remove-Item -Path $filePath -Force
-        # }
-    }
+    # $files = Get-ChildItem -Path $backfillDir | Where-Object { $_.Name -notlike '*-raw.tsv' }
+    # foreach ($file in $files) {
+    #     $filePath = $file.FullName
+    #     $fileName = $file.Name
+    #     $uploadResult = aws s3 cp $filePath "s3://esl-ue1-dev01/q2/esl-service/incoming/$fileName"
+    #     if ($uploadResult -match "upload:") {
+    #         Remove-Item -Path $filePath -Force
+    #     }
+    # }
 }
